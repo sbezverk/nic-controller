@@ -1,0 +1,4 @@
+FROM scratch
+
+COPY ./bin/nic-controller /nic-controller
+ENTRYPOINT ["/nic-controller"]
