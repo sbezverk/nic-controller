@@ -84,7 +84,7 @@ func main() {
 	labelSelector := labels.NewSelector()
 	podSelector, err := labels.NewRequirement(jalapenoInfraLabel, selection.DoubleEquals, []string{jalapenoInfraLabelValue})
 	if err != nil {
-		klog.Errorf("Failed to create Requirement for jalapeno.io/infra-app with error: %+v", err)
+		klog.Errorf("Failed to create Requirement for %s label with error: %+v", jalapenoInfraLabel, err)
 		os.Exit(1)
 	}
 	labelSelector = labelSelector.Add(*podSelector)
