@@ -82,7 +82,7 @@ spec:
             - name: sysfs
               mountPath: /sys
       nodeSelector:
-        jalapeno.io/infra-app: nic-controller
+        jalapeno.io/infra-app-nic-controller: nic-controller
       volumes:
         - name: sysfs
           hostPath:

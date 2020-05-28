@@ -53,7 +53,7 @@ func (c *podController) handleUpdatePod(oldObj, newObj interface{}) {
 	}
 	if podOld.DeletionTimestamp == nil && podNew.DeletionTimestamp != nil {
 		klog.V(5).Infof("pod %s/%s is about to be deleted", podNew.ObjectMeta.Namespace, podNew.ObjectMeta.Name)
-		c.removeClient(podNew)
+		//		c.removeClient(podNew)
 	} else {
 		c.addClient(podNew)
 	}

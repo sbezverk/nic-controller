@@ -38,6 +38,25 @@ func GetLink(ns netns.NsHandle, prefix string) ([]netlink.Link, error) {
 	return links, nil
 }
 
+// CheckLink returns true if the nic specified by the link's Name is found in the specified namespace
+func CheckLink(ns netns.NsHandle, link netlink.Link) (bool, error) {
+	h, err := netlink.NewHandleAt(ns)
+	if err != nil {
+		return false, fmt.Errorf("failure to get pod's handle with error: %+v", err)
+	}
+	ls, err := h.LinkList()
+	if err != nil {
+		return false, fmt.Errorf("failure to get pod's interfaces with error: %+v", err)
+	}
+	for _, l := range ls {
+		if strings.Compare(link.Attrs().Name, l.Attrs().Name) == 0 {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // AllocateLink allocates a link to a specified destination namespace
 func AllocateLink(destns netns.NsHandle, link netlink.Link) error {
 	ns, err := netns.Get()
@@ -67,12 +86,30 @@ func DeallocateLink(srcns, destns netns.NsHandle, link netlink.Link) error {
 	if err := netns.Set(srcns); err != nil {
 		return fmt.Errorf("failed to set source namespace")
 	}
+	// Before moving the nic back, check if it is still there
+	found, err := CheckLink(srcns, link)
+	if err != nil {
+		return fmt.Errorf("failed to check if link: %s exists in the source namespace", link.Attrs().Name)
+	}
+	if !found {
+		return fmt.Errorf("link: %s has disappeared from the source namespace", link.Attrs().Name)
+	}
+	fmt.Printf("Link with name: %s has been found in the expected namespace\n", link.Attrs().Name)
 	// Moving the link from source namespace to the destination namespace
 	if err := netlink.LinkSetNsFd(link, int(destns)); err != nil {
 		return fmt.Errorf("failure to place link into the destination namespace with error: %+v", err)
 	}
 	// Waiting for the link to appear in destination namespace
 	if err := waitForLink(destns, link); err != nil {
+		// For debugging purposes
+		found, err := CheckLink(srcns, link)
+		if err != nil {
+			return fmt.Errorf("failed to check if link: %s exists in the source namespace After move", link.Attrs().Name)
+		}
+		if !found {
+			return fmt.Errorf("link: %s has disappeared from the source namespace After move", link.Attrs().Name)
+		}
+		fmt.Printf("Link with name: %s has still been found in the source namespace After move\n", link.Attrs().Name)
 		return err
 	}
 
@@ -94,7 +131,7 @@ func waitForLink(ns netns.NsHandle, link netlink.Link) error {
 		return fmt.Errorf("failure to get namespace's handle with error: %+v", err)
 	}
 	ticker := time.NewTicker(time.Millisecond * 250)
-	timeout := time.NewTimer(time.Millisecond * 1000)
+	timeout := time.NewTimer(time.Millisecond * 30000)
 	for {
 		links, _ := nsh.LinkList()
 		for _, l := range links {
