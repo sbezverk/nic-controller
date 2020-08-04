@@ -25,6 +25,7 @@ func (c *podController) handleAddPod(obj interface{}) {
 		klog.V(5).Infof("pod runs on host: %s controller runs on host: %s hence pod is not local, ignoring it", pod.Status.HostIP, c.localNodeIP)
 		return
 	}
+	klog.V(5).Infof("Add pod handler calls add client for pod: %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 	c.addClient(pod)
 }
 
@@ -53,8 +54,9 @@ func (c *podController) handleUpdatePod(oldObj, newObj interface{}) {
 	}
 	if podOld.DeletionTimestamp == nil && podNew.DeletionTimestamp != nil {
 		klog.V(5).Infof("pod %s/%s is about to be deleted", podNew.ObjectMeta.Namespace, podNew.ObjectMeta.Name)
-		c.removeClient(podNew)
+		//		c.removeClient(podNew)
 	} else {
+		klog.V(5).Infof("Update pod handler calls add client for pod: %s/%s", podNew.ObjectMeta.Namespace, podNew.ObjectMeta.Name)
 		c.addClient(podNew)
 	}
 }
@@ -81,5 +83,6 @@ func (c *podController) handleDeletePod(obj interface{}) {
 		klog.V(5).Infof("pod runs on host: %s controller runs on host: %s hence pod is not local, ignoring it", pod.Status.HostIP, c.localNodeIP)
 		return
 	}
+	klog.V(5).Infof("Delete pod handler calls delete client for pod: %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 	c.removeClient(pod)
 }
