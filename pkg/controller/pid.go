@@ -65,8 +65,6 @@ func getPIDFromCgroupProcs(path string) (string, error) {
 }
 
 func getContainerID(p *v1.Pod) (string, error) {
-	// Two cases main container is in Running state and in Pending
-	// Pending can inidcate that Init container is still running
 	if p.Status.Phase == v1.PodRunning {
 		return strings.Split(p.Status.ContainerStatuses[0].ContainerID, "://")[1][:12], nil
 	}
@@ -81,5 +79,5 @@ func getContainerID(p *v1.Pod) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("none of containers of pod %s/%s is in running state", p.ObjectMeta.Namespace, p.ObjectMeta.Name)
+	return "", fmt.Errorf("none of containers of pod %s/%s yet in running state", p.ObjectMeta.Namespace, p.ObjectMeta.Name)
 }

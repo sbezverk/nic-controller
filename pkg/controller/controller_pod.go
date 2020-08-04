@@ -45,20 +45,23 @@ type podController struct {
 }
 
 func (c *podController) addClient(p *v1.Pod) {
+	klog.V(5).Infof("pod Controller add client for pod: %s/%s", p.ObjectMeta.Namespace, p.ObjectMeta.Name)
 	c.Lock()
 	defer c.Unlock()
 	if _, ok := c.clients[p.ObjectMeta.UID]; ok {
+		klog.V(5).Infof("pod Controller pod: %s/%s already exists", p.ObjectMeta.Namespace, p.ObjectMeta.Name)
 		// The client has already been recorded in the map
 		return
 	}
 	id, err := getContainerID(p)
 	if err != nil {
+		klog.Errorf("pod Controller failed to get Container ID for pod: %s/%s with error: %+v", p.ObjectMeta.Namespace, p.ObjectMeta.Name, err)
 		return
 	}
 	klog.V(5).Infof("container id: %+s", id)
 	pid, err := GetContainerPID(id)
 	if err != nil {
-		klog.Errorf("fail to get container's id with error: %+v", err)
+		klog.Errorf("fail to get container's pid with error: %+v", err)
 		return
 	}
 	ns, err := netns.GetFromPid(pid)
