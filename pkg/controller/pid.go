@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang/glog"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -65,6 +66,7 @@ func getPIDFromCgroupProcs(path string) (string, error) {
 }
 
 func getContainerID(p *v1.Pod) (string, error) {
+	glog.Infof("p.Status: %+v", p.Status)
 	if p.Status.Phase == v1.PodRunning {
 		return strings.Split(p.Status.ContainerStatuses[0].ContainerID, "://")[1][:12], nil
 	}
